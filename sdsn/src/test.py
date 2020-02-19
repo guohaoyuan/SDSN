@@ -119,7 +119,7 @@ index = 0
 i = 1
 list_d = 0
 transform=transforms.Compose([transforms.Resize((100, 100)),
-                              transforms.ToTensor()])
+                              transforms.ToTensor()])   # to reduce compute cost
 
 
 

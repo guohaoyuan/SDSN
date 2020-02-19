@@ -176,7 +176,7 @@ siamese_dataset = SiameseNetworkDataset(imageFolderDataset=folder_dataset,
                                         transform=transforms.Compose([transforms.Resize((100,100)),
                                                                       transforms.ToTensor()
                                                                       ])
-                                       ,should_invert=False)
+                                       ,should_invert=False)        # to reduce compute cost
 
 ##################孪生网络###############
 class Sia_VGG(nn.Module):
