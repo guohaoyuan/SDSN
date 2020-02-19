@@ -44,16 +44,16 @@ class Sia_VGG(nn.Module):
         self.classifer2=nn.Sequential(
             nn.ReLU(True),
             nn.Linear(100, 5),
-        )#4608-->10
+        )
 
     def forward_once(self, x):
         output = self.features(x)
-        # print(output.size())
+        
         output = output.view(output.size(0), -1)
-        # print(output.size())#64*4608
+        
         output=self.classifer1(output)
         output = self.classifer2(output)
-        # print(output.size())
+        
         return output
 
     #前向传播
@@ -133,68 +133,45 @@ while index < 3200:   # test data
     c=int(img0_name.split('_')[-1].split('.')[0])
     img0_path=os.path.join(root_dir,img0_name)
     if c in (1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15):
-        # print('正常')
+        
         d = 16 - c
-        # print('c:{}, d:{}'.format(c, d))
+       
         if c < 10:
             img1_name = frame.iloc[index, 0].split('.')[0][:-1] + str(d) + '.jpg'
         else:
             img1_name = frame.iloc[index, 0].split('.')[0][:-2] + str(d) + '.jpg'
         img1_path = os.path.join(root_dir + '/' + img1_name)
-        # print('第一图：{} \n第二图：{}'.format(img0_name, img1_name))
+        
         img1 = Image.open(img1_path)
-        # print('img1 size:{}\nimg1:{}\nimg1 mode:{}'.format(img1.size, type(img1), img1.mode))
+        
         img1 = img1.transpose(Image.FLIP_LEFT_RIGHT)
         img0 = Image.open(img0_path)
     else:
-        # print('特殊')
+        
         gen = Image.open(img0_path)
         img1_name = img0_name
-        # print('第一图：{} \n第二图：{}'.format(img0_name, img1_name))
+        
         img0 = gen.crop((0, 0, 256, 660))
 
         img1 = gen.crop((256, 0, 512, 660))
-        # print('img1 size:{}\nimg1:{}\nimg1 mode:{}'.format(img1.size,type(img1),img1.mode))
+        
         img1 = img1.transpose(Image.FLIP_LEFT_RIGHT)
     img0=transform(img0)
     img1=transform(img1)
-    # print('img1_tfd size:{}'.format(img1.size()))
+    
     img0=img0.unsqueeze(0)
     img1=img1.unsqueeze(0)
     label = frame.iloc[index, 1]
     label=torch.from_numpy(np.array(label, dtype=np.float32))
     x0,x1,label=img0.cuda(),img1.cuda(),label.cuda()
-    # print('x0 size:{}\nx1:{}'.format(type(x0),type(x1)))
-    #net=net('VGG16').cuda
+    
     output1, output2 = net(x0, x1)
 
     euclidean_distance = F.pairwise_distance(output1, output2)
-    # print('euclidean_distance type:{}'.format(euclidean_distance))
+    
     euclidean_distance=euclidean_distance.cpu().detach().numpy()
-    # print('euclidean_distance type:{}'.format(type(euclidean_distance)))
 
-    # list_d+=euclidean_distance
-    # print('list_d:{}'.format(list_d))
-    ## idn ###
-    # if c == 0:
-    #     list_d += 0.8 * euclidean_distance
-    # elif c == 1 or c == 15:
-    #     list_d += 0.8 * euclidean_distance
-    # elif c == 2 or c == 14:
-    #     list_d += 0.8 * euclidean_distance
-    # elif c == 3 or c == 13:
-    #     list_d += 0.7 * euclidean_distance
-    # elif c == 4 or c == 12:
-    #     list_d += 0.6 * euclidean_distance
-    # elif c == 5 or c == 11:
-    #     list_d += 0.6 * euclidean_distance
-    # elif c == 6 or c == 10:
-    #     list_d += 0.8 * euclidean_distance
-    # elif c == 7 or c == 9:
-    #     list_d += 0.8 * euclidean_distance
-    # elif c == 8:
-    #     list_d += 0.7 * euclidean_distance
-
+    ##A idn ###
     if c == 0:
         list_d += 0.09 * euclidean_distance
     elif c == 1 or c == 15:
@@ -216,10 +193,10 @@ while index < 3200:   # test data
 
 
     if i%16==0:
-        mean_d=list_d                                                        # a-idn
-        # print('mean_d:{}'.format(mean_d))
+        mean_d=list_d                                                      
+        
         list_d=0
-        if (mean_d > 2.5):  # 大于1就是true，就是1  1.7 = best threshold
+        if (mean_d > 2.5):  # best threshold, we select the best threshold with the best F1 according to  F1.png. 
             # print('该人有异物,label:{}'.format(label))
             y += 1  # 检测出有异物的总数
             if (label == 1):
@@ -240,7 +217,7 @@ while index < 3200:   # test data
                 print("img name =", img0_name)
                 q+=1
     index+=1
-    # print('index:{}'.format(index))
+ 
     i += 1
 print('y:{}\na:{}\nb:{}\nq:{}\ng:{}'.format(y,a,b,q,g))
 n_p = a / y  # negetive查准率
